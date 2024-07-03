@@ -9,7 +9,7 @@ def main():
     # Configuration for socket
     s = socket.socket()
     port = 9999
-    s.bind(("", port))
+    s.bind(("127.0.0.1", port))
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     print("Socket created and binded to port number " + str(port))
 
