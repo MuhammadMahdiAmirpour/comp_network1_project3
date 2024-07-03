@@ -1,2 +1,2 @@
-class Receiver:
+class Reciever:
     pass
