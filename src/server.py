@@ -1,6 +1,9 @@
 # Server Side Program
 # Physical Layer and Data Link Layer Implementation
 
+# Importing our custom classes
+import crc
+
 # Importing socket library for socket programming
 import socket
 
