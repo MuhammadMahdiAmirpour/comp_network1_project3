@@ -108,7 +108,7 @@ class Hamming:
     def breakdownBytes(self, data):
         final = b''
         if len(data) % 2 != 0:
-            raise ValueError("Panjang data harus genap untuk dekode Hamming 4-bit.")
+            raise ValueError("The data length must be even for 4-bit Hamming decode.")
 
         for i in range(0, len(data), 2):
             byte1, byte2 = data[i], data[i + 1]
