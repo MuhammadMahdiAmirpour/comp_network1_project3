@@ -59,6 +59,8 @@ class CRC:
 
 data = '100100'
 key = '1101'
+# data = '100100001'
+# key = '1101'
 c = CRC()
 c.encodedData(data,key)
 print('---------------')
