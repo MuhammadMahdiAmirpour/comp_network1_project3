@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+
+<head>
+    <title>Hamming Encoder</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔐</text></svg>">
+
+
+    <!-- UIkit CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.6.22/dist/css/uikit.min.css" />
+
+    <!-- UIkit JS -->
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.6.22/dist/js/uikit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.6.22/dist/js/uikit-icons.min.js"></script>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+    <!-- Setting script root -->
+    <script type="text/javascript">
+        $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+    </script>
+</head>
+<body>
+    <nav class="uk-navbar-container uk-margin uk-dark" uk-navbar>
+        <div class="uk-navbar-left">
+
+            <a class="uk-navbar-item uk-logo" href="/">Hamming Encoder</a>
+
+        </div>
+        <div class="uk-navbar-right">
+
+            <div class="uk-navbar-item">
+                <div class="uk-navbar-nav">
+                    {% block navbar %}
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="uk-container-small uk-align-center">
+        {% block content %}
+        {% endblock %}
+    </div>
+    {% block bodyjs %}
+    {% endblock %}
+
+</body>
+</html>
