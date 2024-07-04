@@ -1,72 +1,71 @@
 import socket
-import threading
+import struct
+import random
 
 class Server:
-    def __init__(self, host='127.0.0.1', port=65432):
+    def __init__(self, host='127.0.0.1', port=65432, window_size=4):
         self.host = host
         self.port = port
         self.server_socket = None
-        self.clients = []
-        self.running = False
+        self.window_size = window_size
+        self.expected_seq_num = 0
+        self.buffer = b''
 
     def start(self):
         try:
-            self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.server_socket.bind((self.host, self.port))
-            self.server_socket.listen()
-            self.running = True
             print(f"Server listening on {self.host}:{self.port}")
 
-            while self.running:
+            while True:
                 try:
-                    client_socket, addr = self.server_socket.accept()
-                    print(f"New connection from {addr}")
-                    self.clients.append(client_socket)
-                    client_thread = threading.Thread(target=self.handle_client, args=(client_socket,))
-                    client_thread.start()
-                except socket.error as e:
-                    if self.running:
-                        print(f"Error accepting connection: {e}")
+                    data, addr = self.server_socket.recvfrom(1024)
+                    self.process_packet(data, addr)
+                except KeyboardInterrupt:
+                    print("\nServer stopped.")
+                    break
         except socket.error as e:
-            print(f"Error starting server: {e}")
+            print(f"Socket error: {e}")
         finally:
             self.stop()
 
-    def handle_client(self, client_socket):
-        while self.running:
-            try:
-                data = client_socket.recv(1024).decode('utf-8')
-                if not data:
-                    break
-                print(f"Received: {data}")
-                self.broadcast(data, client_socket)
-            except Exception as e:
-                print(f"Error handling client: {e}")
-                break
-        self.clients.remove(client_socket)
-        client_socket.close()
+    def process_packet(self, data, addr):
+        seq_num, payload = struct.unpack('!I{}s'.format(len(data) - 4), data)
+        
+        # Simulate packet loss
+        if random.random() < 0.1:  # 10% chance of packet loss
+            print(f"Packet loss simulated for sequence number {seq_num}")
+            return
 
-    def broadcast(self, message, sender_socket):
-        for client in self.clients:
-            if client != sender_socket:
-                try:
-                    client.send(message.encode('utf-8'))
-                except Exception as e:
-                    print(f"Error broadcasting to client: {e}")
-                    self.clients.remove(client)
+        if seq_num == self.expected_seq_num:
+            self.buffer += payload
+            self.expected_seq_num += 1
+            print(f"Received packet {seq_num}")
+
+            # Send ACK
+            self.send_ack(self.expected_seq_num - 1, addr)
+
+            # Process any consecutive packets in buffer
+            while self.expected_seq_num in self.buffer:
+                self.buffer = self.buffer[len(payload):]
+                self.expected_seq_num += 1
+        else:
+            print(f"Received out-of-order packet {seq_num}, expected {self.expected_seq_num}")
+            # Send ACK for the last correctly received packet
+            self.send_ack(self.expected_seq_num - 1, addr)
+
+    def send_ack(self, ack_num, addr):
+        if self.server_socket:
+            ack = struct.pack('!I', ack_num)
+            try:
+                self.server_socket.sendto(ack, addr)
+            except socket.error as e:
+                print(f"Error sending ACK: {e}")
 
     def stop(self):
-        self.running = False
-        for client in self.clients:
-            try:
-                client.close()
-            except:
-                pass
-        self.clients.clear()
         if self.server_socket:
-            try:
-                self.server_socket.close()
-            except:
-                pass
+            self.server_socket.close()
+            self.server_socket = None
         print("Server stopped.")
+
 
