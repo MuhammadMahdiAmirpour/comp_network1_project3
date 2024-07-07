@@ -77,6 +77,6 @@ class TestStringMethods(unittest.TestCase):
         self.assertNotEqual(codeword, self.checker8.correct(corrupted))
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': #todo create a merge request and be able to push
     unittest.main()
 
