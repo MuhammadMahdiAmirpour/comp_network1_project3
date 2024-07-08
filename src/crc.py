@@ -1,4 +1,4 @@
-import convertor
+import random
 
 CRC8_POLYNOMIAL = "100000111"
 
@@ -33,11 +33,21 @@ def __mod2div(dividend, divisor):
 
 
 def encode_data(data, key=CRC8_POLYNOMIAL):
+    return data + generate_crc(data, key)
+
+
+def generate_crc(data, key=CRC8_POLYNOMIAL):
     l_key = len(key)
     appended_data = data + '0' * (l_key - 1)
     remainder = __mod2div(appended_data, key)
-    codeword = data + remainder
-    return codeword
+    return remainder
+
+def generate_invalid_crc(data, key=CRC8_POLYNOMIAL):
+    crc = generate_crc(data, key)
+    bit_error_index = random.randint(0, len(crc)-1)
+    wrong_bit = '1' if int(crc[bit_error_index]) == 0 else '0'
+    crc = crc[0:bit_error_index] + wrong_bit + crc[bit_error_index + 1:]
+    return crc
 
 
 def check_crc(data, key=CRC8_POLYNOMIAL):
@@ -67,4 +77,3 @@ if __name__ == "__main__":
         print("The given CRC data is correct.")
     else:
         print("The given CRC data is incorrect.")
-

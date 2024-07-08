@@ -12,17 +12,19 @@ def build(d: str):
     if not crc.check_crc(d):
         print(f'ERROR: invalid CRC\t{d}')
         return
-    data = d[MAX_SEQ_BITS:-len(crc.CRC8_POLYNOMIAL)+1]
+    data = d[MAX_SEQ_BITS:-len(crc.CRC8_POLYNOMIAL) + 1]
     frame = Frame(data)
     frame.seq = convertor.strbin_to_int(d[0:MAX_SEQ_BITS])
     return frame
 
 
 class Frame:
-    def __init__(self, data, seq=None):
+    def __init__(self, data: str, seq: int = None, crc: str = None):
         self.seq = seq
         self.data = data
+        self.crc = crc
 
     def to_string(self):
-        sending_data = convertor.int_to_strbin(self.seq, MAX_SEQ_BITS) + self.data
-        return crc.encode_data(sending_data)
+        if self.crc is None:
+            self.crc = crc.generate_crc(convertor.int_to_strbin(self.seq, MAX_SEQ_BITS) + self.data)
+        return convertor.int_to_strbin(self.seq, MAX_SEQ_BITS) + self.data + self.crc
