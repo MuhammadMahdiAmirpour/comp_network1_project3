@@ -1,3 +1,4 @@
+import random
 import socket
 from hamming_checker import HammingChecker
 import frame
@@ -6,7 +7,8 @@ from time import sleep
 DEFAULT_HOST = '127.0.0.1'
 DEFAULT_PORT = 65432
 WINDOW_SIZE = 4
-
+EOL = b'\0'
+MAX_SEQ = 8
 
 class Receiver:
     def __init__(self, window_size=4):
@@ -16,7 +18,7 @@ class Receiver:
         self.connection = None
         self.window_size = window_size
         self.seq = 0
-        self.buffer = {}
+        self.buffer = b''
         self.received_data = b''
         self.hamming_checker = HammingChecker(3)  # for (7,4) Hamming code
 
@@ -34,13 +36,39 @@ class Receiver:
     def receive_from_transmitter(self):
         while True:
             data = self.connection.recv(1024)
-            f = self.process_data(data.decode())
-            self.send_ack(f.seq)
+            self.buffer += data
+            while EOL in self.buffer:
+                f, self.buffer = self.buffer.split(EOL, 1)
+                f = self.process_data(f.decode())
+                if f is None:
+                    print(f'NACK: f is None')
+                    self.send_rej()
+                elif f.seq != self.seq:
+                    print(f'NACK: {f.data}\t{f.seq}')
+                else:
+                    if random.random() < 0.05:
+                        print(f'Delaying ACK: {f.data}\t{f.seq}')
+                        sleep(5.5)
+                    else:
+                        print(f'ACK: {f.data}\t{f.seq}')
+                    self.send_ack()
             sleep(2)
 
+    def send_ack(self):
 
-    def send_ack(self, seq:int):
-        self.connection.sendall(str(seq).encode())
+        self.send(self.get_seq_and_increment())
+
+    def send(self, input):
+        self.connection.sendall(str(input).encode() + EOL)
+
+    def send_rej(self):
+        self.send(-self.seq)
+
+    def get_seq_and_increment(self):
+        output = self.seq
+        self.seq += 1
+        self.seq %= MAX_SEQ
+        return output
 
     def allow_address_reuse(self):
         self.receiver_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -51,8 +79,8 @@ class Receiver:
         f = frame.build(data)
         if f is None:
             return
-        print(f'received: {f.data}\t{f.seq}')
         return f
+
 
 
 if __name__ == "__main__":
@@ -61,5 +89,3 @@ if __name__ == "__main__":
         server.start()
     except KeyboardInterrupt:
         print("Server stopped")
-    finally:
-        server.stop()
