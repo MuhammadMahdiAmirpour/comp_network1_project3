@@ -1,3 +1,4 @@
+import random
 import socket
 from hamming_checker import HammingChecker
 import frame
@@ -45,11 +46,16 @@ class Receiver:
                 elif f.seq != self.seq:
                     print(f'NACK: {f.data}\t{f.seq}')
                 else:
-                    print(f'ACK: {f.data}\t{f.seq}')
+                    if random.random() < 0.05:
+                        print(f'Delaying ACK: {f.data}\t{f.seq}')
+                        sleep(5.5)
+                    else:
+                        print(f'ACK: {f.data}\t{f.seq}')
                     self.send_ack()
             sleep(2)
 
     def send_ack(self):
+
         self.send(self.get_seq_and_increment())
 
     def send(self, input):
