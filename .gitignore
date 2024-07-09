@@ -1,0 +1,11 @@
+# Dependencies
+frontend/node_modules/
+
+# npm debugging logs 
+npm-debug.log*
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache

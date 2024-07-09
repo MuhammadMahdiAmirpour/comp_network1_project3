@@ -1,0 +1,56 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go-Back-N Protocol Simulator</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+    <div id="root">
+        <!-- React will render the app here -->
+    </div>
+
+    <!-- Load React. -->
+    <!-- Note: when deploying, replace "development.js" with "production.min.js". -->
+    <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+
+    <!-- Load our React component. -->
+    <script src="{% static 'js/main.js' %}"></script>
+
+    <script>
+        // This ensures that Django's CSRF protection works with fetch API
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+
+        // Add CSRF token to all fetch requests
+        const originalFetch = window.fetch;
+        window.fetch = function() {
+            let args = Array.prototype.slice.call(arguments);
+            if (args[1] && args[1].method && ['POST', 'PUT', 'DELETE', 'PATCH'].indexOf(args[1].method.toUpperCase()) !== -1) {
+                if (args[1].headers) {
+                    args[1].headers['X-CSRFToken'] = csrftoken;
+                } else {
+                    args[1].headers = {'X-CSRFToken': csrftoken};
+                }
+            }
+            return originalFetch.apply(this, args);
+        };
+    </script>
+</body>
+</html>

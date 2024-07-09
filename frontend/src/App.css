@@ -1,0 +1,161 @@
+/* frontend/src/App.css */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-image: url('/public/images/bg.jpg'); /* Replace with your image path */
+    background-size: cover;
+    background-attachment: fixed;
+    background-position: center;
+    color: #333; /* Default text color */
+}
+
+.App {
+    text-align: center;
+}
+
+.App-header {
+    background-color: rgba(40, 44, 52, 0.9); /* Semi-transparent dark background */
+    padding: 20px;
+    color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.simulator {
+    display: flex;
+    justify-content: space-around;
+    padding: 20px;
+    flex-wrap: wrap;
+}
+
+.simulator-column {
+    width: 45%;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    transition: box-shadow 0.3s ease, background-color 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.simulator-column:hover {
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Transmitter styling */
+.simulator-column:nth-child(1) {
+    background-color: rgba(100, 149, 237, 0.3); /* Light blue with 30% opacity */
+    border: 2px solid rgba(100, 149, 237, 0.7);
+}
+
+.simulator-column:nth-child(1):hover {
+    background-color: rgba(100, 149, 237, 0.4); /* Slightly more opaque on hover */
+}
+
+/* Receiver styling */
+.simulator-column:nth-child(2) {
+    background-color: rgba(144, 238, 144, 0.3); /* Light green with 30% opacity */
+    border: 2px solid rgba(144, 238, 144, 0.7);
+}
+
+.simulator-column:nth-child(2):hover {
+    background-color: rgba(144, 238, 144, 0.4); /* Slightly more opaque on hover */
+}
+
+.control-panel {
+    margin-bottom: 20px;
+}
+
+.control-btn {
+    padding: 10px 20px;
+    margin: 0 10px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    transition: background-color 0.3s, opacity 0.3s;
+}
+
+.start {
+    background-color: rgba(76, 175, 80, 0.8); /* Semi-transparent green */
+    color: white;
+}
+
+.start:hover {
+    background-color: rgba(76, 175, 80, 1); /* Fully opaque on hover */
+}
+
+.stop {
+    background-color: rgba(244, 67, 54, 0.8); /* Semi-transparent red */
+    color: white;
+}
+
+.stop:hover {
+    background-color: rgba(244, 67, 54, 1); /* Fully opaque on hover */
+}
+
+.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.log-display {
+    height: 300px;
+    overflow-y: auto;
+    border: 1px solid rgba(221, 221, 221, 0.5);
+    padding: 10px;
+    text-align: left;
+    font-family: monospace;
+    background-color: rgba(249, 249, 249, 0.5); /* Semi-transparent light background */
+    color: #333;
+}
+
+.log-entry {
+    margin: 5px 0;
+    padding: 5px;
+    border-bottom: 1px solid rgba(238, 238, 238, 0.5);
+}
+
+.log-entry:nth-child(even) {
+    background-color: rgba(240, 240, 240, 0.3);
+}
+
+.clear-logs-btn {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: rgba(33, 150, 243, 0.8); /* Semi-transparent blue */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.clear-logs-btn:hover {
+    background-color: rgba(33, 150, 243, 1); /* Fully opaque on hover */
+}
+
+/* Scrollbar styling */
+.log-display::-webkit-scrollbar {
+    width: 10px;
+}
+
+.log-display::-webkit-scrollbar-track {
+    background: rgba(241, 241, 241, 0.5);
+}
+
+.log-display::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 5px;
+}
+
+.log-display::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+@media (max-width: 768px) {
+    .simulator-column {
+        width: 100%;
+    }
+}
