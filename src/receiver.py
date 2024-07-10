@@ -3,12 +3,10 @@ import socket
 from hamming_checker import HammingChecker
 import frame
 from time import sleep
+import checksum
+import parity
+from constants import *
 
-DEFAULT_HOST = '127.0.0.1'
-DEFAULT_PORT = 65432
-WINDOW_SIZE = 4
-EOL = b'\0'
-MAX_SEQ = 8
 
 class Receiver:
     def __init__(self, window_size=4):
@@ -62,7 +60,7 @@ class Receiver:
         self.connection.sendall(str(input).encode() + EOL)
 
     def send_rej(self):
-        self.send(-self.seq)
+        self.send(-1)
 
     def get_seq_and_increment(self):
         output = self.seq
@@ -76,17 +74,45 @@ class Receiver:
     def process_data(self, data):
         if data == "":
             return
-        hamming_decoded_data = self.hamming_checker.decode(data)
-        corrupted_index = self.hamming_checker.check(data)
-        if corrupted_index != -1:
-            print(f'Warning: frame is corrupted at index {corrupted_index}')
-            print(f'Corrected frame is {hamming_decoded_data}')
-        data = hamming_decoded_data
+        if self.check_valid(data) is False:
+            return
+        data = self.decode(data)
         f = frame.build(data)
         if f is None:
             return
         return f
 
+    def decode(self, data: str):
+        match ENCODING:
+            case Encoding.PARITY:
+                return data[:-1]
+            case Encoding.TWO_D_PARITY:
+                return parity.decode_2d(data)
+            case Encoding.CHECKSUM:
+                return checksum.find_checksum(data[0:18])
+            case Encoding.HAMMING:
+                return self.hamming_checker.decode(data)
+
+    def check_valid(self, data: str):
+        match ENCODING:
+            case Encoding.PARITY:
+                parity_bit = data[-1]
+                data = data[:-1]
+                if parity.encode(data) == parity_bit:
+                    return True
+                print('Invalid Parity')
+                return False
+            case Encoding.TWO_D_PARITY:
+                return parity.check_2d(data)
+            case Encoding.CHECKSUM:
+                return checksum.find_checksum(data[0:18]) == data[18:]
+            case Encoding.HAMMING:
+                corrupted_index = self.hamming_checker.check(data)
+                if corrupted_index == -1:
+                    return True
+                print(f'Warning: frame is corrupted at index {corrupted_index}')
+                print(f'Corrected frame is {self.decode(data)}')
+                return True
 
 
 if __name__ == "__main__":

@@ -6,19 +6,17 @@ from src.frame import Frame
 from time import sleep
 from crc import generate_invalid_crc, check_crc
 from hamming_encoder import HammingEncoder
+import checksum
+import parity
+from constants import *
 
-DEFAULT_HOST = '127.0.0.1'
-DEFAULT_PORT = 65432
 
-WINDOW_SIZE = 4
-MAX_SEQ = 8
-EOL = b'\0'
+
 
 queue_lock = threading.Lock()
 timers_lock = threading.Lock()
 
 TIMEOUT = 5  # Timeout in seconds
-
 
 class Transmitter:
     def __init__(self, host='127.0.0.1', port=65432):
@@ -60,6 +58,18 @@ class Transmitter:
         self.send_valid_data()
         self.send_valid_data()
         self.send_data_with_one_bit_error()
+        self.send_valid_data()
+        self.send_valid_data()
+        self.send_valid_data()
+        self.send_valid_data()
+        self.send_valid_data()
+        self.send_valid_data()
+        self.send_valid_data()
+        self.send_valid_data()
+        self.send_valid_data()
+        self.send_valid_data()
+        self.send_valid_data()
+        self.send_valid_data()
 
     def start_timer(self, seq):
         timers_lock.acquire()
@@ -91,19 +101,31 @@ class Transmitter:
         while self.queue_is_full():
             print('Waiting: Maximum packets sent (window size limit)')
             sleep(1)
-        if random.random() < 0.1 and check_crc(f.to_string()):  # 10% chance of packet loss only if crc is correct
-            print(f"Packet loss simulated for sequence number {f.seq}")
-            self.decrement_seq()
-            return
-        if random.random() < 0.2 and check_crc(f.to_string()):
-            self.send_corrupted_hamming_code(f)
-            return
-        self.send(f)
+        if check_crc(f.to_string()):
+            frame_is_fucked = self.try_fuck_with_data(f)
+            if frame_is_fucked:
+                return
+
+        self.send_frame(f, True)
         sleep(0.25)
 
+    def try_fuck_with_data(self, f: Frame):
+        rand_value = random.random()
+        if rand_value < 0.1:
+            print(f"Packet loss simulated for seq: {f.seq}, frame: {f.to_string()}")
+            self.decrement_seq()
+            return True
+        if 0.1 < rand_value < 0.2 and ENCODING == Encoding.HAMMING:
+            print(f'Corrupted hamming code simulated for seq: {f.seq}, frame: {f.to_string()}')
+            self.send_corrupted_hamming_code(f)
+            return True
+        if 0.1 < rand_value < 0.2 and ENCODING == Encoding.PARITY:
+            print(f'Corrupted parity simulated for seq: {f.seq}, frame: {f.to_string()}')
+            self.send_corrupted_parity(f)
+            return True
+
     def send_corrupted_hamming_code(self, f):
-        print(f'Corrupted hamming code simulated for seq: {f.seq}, frame: {f.to_string()}')
-        enc = self.hamming_encoder.encode(f.to_string())
+        enc = self.encode(f.to_string())
         enc = enc[0:9] + ('0' if enc[9] == '1' else '1') + enc[10:]
         self.add_to_queue(f)
         self.start_timer(f.seq)
@@ -111,10 +133,10 @@ class Transmitter:
               f'\ttimers:{self.get_timers_seq()}')
         self.connection.sendall(enc.encode() + b'\0')
 
-    def send(self, f):
+    def send_frame(self, f, encode: bool):
         self.add_to_queue(f)
         self.start_timer(f.seq)
-        enc = self.hamming_encoder.encode(f.to_string())
+        enc = f.to_string() if encode is False else self.encode(f.to_string())
         print(f'Sending data: {f.data}\tseq:{f.seq}\tframe:{enc}\tqueue:{self.get_queue_seqs()}'
               f'\ttimers:{self.get_timers_seq()}')
         self.connection.sendall(enc.encode() + b'\0')
@@ -135,7 +157,7 @@ class Transmitter:
                 seq = seq.decode()
                 seq = int(seq)
                 if seq < 0:
-                    print(f'ERROR: no synchronization, received_seq: {seq}')
+                    print(f'ERROR: no synchronization')
                     self.retransmit_queue()
                 else:
                     print(f'receiver: ack\t{seq}')
@@ -202,7 +224,7 @@ class Transmitter:
         print(f'retransmitting frames with seqs: {[f.seq for f in self.queue]}')
         for f in self.queue:
             f.crc = None
-            enc = self.hamming_encoder.encode(f.to_string())
+            enc = self.encode(f.to_string())
             print(f'Sending {f.data}\t{f.seq}\t{enc}')
             self.connection.sendall(enc.encode() + b'\0')
             self.start_timer(f.seq)
@@ -228,6 +250,28 @@ class Transmitter:
         seqs = [timer for timer in self.timers]
         timers_lock.release()
         return seqs
+
+    def send_corrupted_parity(self, f):
+        enc = self.encode(f.to_string())
+        parity = f.to_string()[-1]
+        enc = enc + ('1' if parity == '0' else '1')
+        self.add_to_queue(f)
+        self.start_timer(f.seq)
+        print(f'Sending data: {f.data}\tseq:{f.seq}\tframe:{enc}\tqueue:{self.get_queue_seqs()}'
+              f'\ttimers:{self.get_timers_seq()}')
+        self.connection.sendall(enc.encode() + b'\0')
+
+    def encode(self, data: str):
+        match ENCODING:
+            case Encoding.PARITY:
+                return data + parity.encode(data)
+            case Encoding.TWO_D_PARITY:
+                return parity.encode_2d(data)
+            case Encoding.CHECKSUM:
+                return data + checksum.find_checksum(data)
+            case Encoding.HAMMING:
+                return self.hamming_encoder.encode(data)
+
 
 def generate_random_bits():
     return ''.join(map(str, np.random.randint(0, 2, 15)))
