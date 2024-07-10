@@ -20,7 +20,7 @@ class Receiver:
         self.seq = 0
         self.buffer = b''
         self.received_data = b''
-        self.hamming_checker = HammingChecker(3)  # for (7,4) Hamming code
+        self.hamming_checker = HammingChecker(5)
 
     def start(self):
         self.receiver_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -76,6 +76,12 @@ class Receiver:
     def process_data(self, data):
         if data == "":
             return
+        hamming_decoded_data = self.hamming_checker.decode(data)
+        corrupted_index = self.hamming_checker.check(data)
+        if corrupted_index != -1:
+            print(f'Warning: frame is corrupted at index {corrupted_index}')
+            print(f'Corrected frame is {hamming_decoded_data}')
+        data = hamming_decoded_data
         f = frame.build(data)
         if f is None:
             return

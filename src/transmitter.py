@@ -5,6 +5,7 @@ import numpy as np
 from src.frame import Frame
 from time import sleep
 from crc import generate_invalid_crc, check_crc
+from hamming_encoder import HammingEncoder
 
 DEFAULT_HOST = '127.0.0.1'
 DEFAULT_PORT = 65432
@@ -30,6 +31,7 @@ class Transmitter:
         self.seq = 0
         self.queue = []
         self.buffer = b''
+        self.hamming_encoder = HammingEncoder(5)
 
     def connect(self):
         try:
@@ -82,7 +84,6 @@ class Transmitter:
 
     def send_valid_data(self):
         random_bits = generate_random_bits()
-        # todo hamming encoding
         f = Frame(random_bits, seq=self.get_seq_and_increment())
         self.send_data(f)
 
@@ -94,12 +95,29 @@ class Transmitter:
             print(f"Packet loss simulated for sequence number {f.seq}")
             self.decrement_seq()
             return
+        if random.random() < 0.2 and check_crc(f.to_string()):
+            self.send_corrupted_hamming_code(f)
+            return
+        self.send(f)
+        sleep(0.25)
+
+    def send_corrupted_hamming_code(self, f):
+        print(f'Corrupted hamming code simulated for seq: {f.seq}, frame: {f.to_string()}')
+        enc = self.hamming_encoder.encode(f.to_string())
+        enc = enc[0:9] + ('0' if enc[9] == '1' else '1') + enc[10:]
         self.add_to_queue(f)
         self.start_timer(f.seq)
-        print(f'Sending data: {f.data}\tseq:{f.seq}\tframe:{f.to_string()}\tqueue:{self.get_queue_seqs()}'
+        print(f'Sending data: {f.data}\tseq:{f.seq}\tframe:{enc}\tqueue:{self.get_queue_seqs()}'
               f'\ttimers:{self.get_timers_seq()}')
-        self.connection.sendall(f.to_string().encode() + b'\0')
-        sleep(0.25)
+        self.connection.sendall(enc.encode() + b'\0')
+
+    def send(self, f):
+        self.add_to_queue(f)
+        self.start_timer(f.seq)
+        enc = self.hamming_encoder.encode(f.to_string())
+        print(f'Sending data: {f.data}\tseq:{f.seq}\tframe:{enc}\tqueue:{self.get_queue_seqs()}'
+              f'\ttimers:{self.get_timers_seq()}')
+        self.connection.sendall(enc.encode() + b'\0')
 
     def get_seq_and_increment(self):
         output = self.seq
@@ -184,8 +202,9 @@ class Transmitter:
         print(f'retransmitting frames with seqs: {[f.seq for f in self.queue]}')
         for f in self.queue:
             f.crc = None
-            print(f'Sending {f.data}\t{f.seq}\t{f.to_string()}')
-            self.connection.sendall(f.to_string().encode() + b'\0')
+            enc = self.hamming_encoder.encode(f.to_string())
+            print(f'Sending {f.data}\t{f.seq}\t{enc}')
+            self.connection.sendall(enc.encode() + b'\0')
             self.start_timer(f.seq)
         queue_lock.release()
 
@@ -211,7 +230,7 @@ class Transmitter:
         return seqs
 
 def generate_random_bits():
-    return ''.join(map(str, np.random.randint(0, 2, 16)))
+    return ''.join(map(str, np.random.randint(0, 2, 15)))
 
 
 if __name__ == "__main__":

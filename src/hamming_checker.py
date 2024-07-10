@@ -62,3 +62,10 @@ class HammingChecker(object):
         else:
             return codeword
 
+    def decode(self, codeword):
+        corrected_codeword = self.correct(codeword)
+
+        p_set = set([2 ** i - 1 for i in range(self.r)])
+        data_bits = [corrected_codeword[i] for i in range(self.n) if i not in p_set]
+
+        return ''.join(data_bits)
