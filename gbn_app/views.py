@@ -3,6 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from .transmitter import Transmitter
 from .receiver import Receiver
+import gbn_app.parity
 import traceback
 
 transmitter_instance = None
@@ -18,10 +19,7 @@ def start_transmitter(request):
     global transmitter_instance
     if transmitter_instance is None or not transmitter_instance.running:
         try:
-            transmitter_instance = Transmitter(
-                receiver_host='localhost',
-                receiver_port=5000
-            )
+            transmitter_instance = Transmitter()
             transmitter_instance.start()
             return JsonResponse({'status': 'Transmitter started'})
         except Exception as e:
@@ -48,10 +46,7 @@ def start_receiver(request):
     global receiver_instance
     if receiver_instance is None or not receiver_instance.running:
         try:
-            receiver_instance = Receiver(
-                host='localhost',
-                port=5000
-            )
+            receiver_instance = Receiver()
             receiver_instance.start()
             return JsonResponse({'status': 'Receiver started'})
         except Exception as e:
