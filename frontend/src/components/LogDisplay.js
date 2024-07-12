@@ -4,9 +4,9 @@ import React, { useRef, useEffect } from 'react';
 function LogDisplay({ logs }) {
   const logEndRef = useRef(null);
 
-  useEffect(() => {
-    logEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [logs]);
+  // useEffect(() => {
+  //   logEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // }, [logs]);
 
   return (
     <div className="log-display">

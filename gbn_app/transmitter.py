@@ -38,6 +38,13 @@ class Transmitter:
         print(f"Transmitter: {message}")
         self.log_queue.put(f"Transmitter: {message}")
     
+    def clear_logs(self):
+        while not self.log_queue.empty():
+            try:
+                self.log_queue.get_nowait()
+            except queue.Empty:
+                break
+    
     def start(self):
         with self.lock:
             if not self.running:
@@ -59,9 +66,10 @@ class Transmitter:
                     except Exception as e:
                         self.log(f"Error closing transmitter connection: {e}")
                 if self.thread:
-                    self.thread.join(timeout=2)
+                    self.thread.join(timeout=0)
                 if self.timers:
-                    self.timer.cancel()
+                    for seq in self.timers:
+                        self.timers[seq].cancel()
                 self.log("Transmitter stopped")
             else:
                 self.log("Transmitter already stopped")
@@ -197,7 +205,7 @@ class Transmitter:
         self.seq += 1
         self.seq %= MAX_SEQ
         return output
-    
+ 
     def get_logs(self):
         logs = []
         while not self.log_queue.empty():

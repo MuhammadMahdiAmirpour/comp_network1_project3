@@ -1,68 +1,28 @@
-import zlib
-from functools import reduce
+def find_checksum(message, div=8):
+    mess_len = len(message)
 
-def simple_sum_checksum(binary_string):
-    """
-    Calculate a simple sum checksum of a binary string.
-    """
-    return sum(int(bit) for bit in binary_string)
+    temp = message[:div]
+    message = message[div:]
+    for i in range((mess_len // div) - 1):
+        temp = _binSum(temp, message[:div])
+        message = message[div:]
 
-def xor_checksum(binary_string):
-    """
-    Calculate an XOR checksum of a binary string.
-    """
-    return reduce(lambda x, y: x ^ y, (int(bit) for bit in binary_string))
-
-def crc32_checksum(binary_string):
-    """
-    Calculate CRC-32 checksum of a binary string.
-    """
-    # Convert binary string to bytes
-    byte_string = int(binary_string, 2).to_bytes((len(binary_string) + 7) // 8, byteorder='big')
-    return zlib.crc32(byte_string)
+    checkSum = temp
+    for i in range(len(checkSum)):
+        if checkSum[i] == '0':
+            checkSum = checkSum[:i] + '1' + checkSum[i + 1:]
+        else:
+            checkSum = checkSum[:i] + '0' + checkSum[i + 1:]
+    return checkSum
 
 
-def check_checksum(received_data, received_checksum):
-    """
-    Check if the received data matches the received checksum.
-    
-    Args:
-    received_data (str): The binary string data received.
-    received_checksum (int): The checksum value received with the data.
-    
-    Returns:
-    bool: True if the calculated checksum matches the received checksum, False otherwise.
-    """
-    # Convert binary string to bytes
-    byte_data = int(received_data, 2).to_bytes((len(received_data) + 7) // 8, byteorder='big')
-    
-    # Calculate CRC-32 checksum of the received data
-    calculated_checksum = zlib.crc32(byte_data)
-    
-    # Compare calculated checksum with received checksum
-    if calculated_checksum == received_checksum:
-        print("Checksum verification successful. Data integrity maintained.")
-        return True
+def _binSum(chunk1, chunk2, div=8):
+    st = bin(int(chunk1, 2) + int(chunk2, 2))
+
+    if len(st) == div + 3:
+        carry = '1'
+        st1 = st[3:]
+        st = _binSum(st1, carry)
+        return st
     else:
-        print("Checksum verification failed. Data may be corrupted.")
-        return False
-
-if __name__ == "__main__":
-    # Example usage
-    binary_string = "1011001010110010101100101011001"
-
-    print(f"Binary string: {binary_string}")
-    print(f"Simple sum checksum: {simple_sum_checksum(binary_string)}")
-    print(f"XOR checksum: {xor_checksum(binary_string)}")
-    print(f"CRC-32 checksum: {crc32_checksum(binary_string)}")
-
-    # Example usage
-    received_data = "1011001010110010101100101011001"
-    received_checksum = 2380432710  # This should be the checksum sent by the transmitter
-
-    is_data_valid = check_checksum(received_data, received_checksum)
-
-    if is_data_valid:
-        print("Receiver: Data is valid.")
-    else:
-        print("Receiver: Data is corrupted.")
+        return st[2:]

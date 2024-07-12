@@ -1,7 +1,6 @@
 // frontend/src/App.js
 import React from 'react';
-import Simulator from './components/Simulator';
-import './App.css';
+import Simulator from './components/Simulator.js';
 
 function App() {
   return (

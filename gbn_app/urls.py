@@ -10,4 +10,5 @@ urlpatterns = [
     path('get_logs/', views.get_logs, name='get_logs'),
     path('clear_logs/', views.clear_logs, name='clear_logs'),
     path('get_status/', views.get_status, name='get_status'),
+    path('set_encoding/', views.set_encoding, name='set_encoding'),
 ]

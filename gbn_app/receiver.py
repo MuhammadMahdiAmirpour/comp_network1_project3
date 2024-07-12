@@ -21,22 +21,28 @@ class Receiver:
         self.buffer = b''
         self.received_data = b''
         self.hamming_checker = HammingChecker(5)
-        self.queue = queue.Queue()
+        self.log_queue = queue.Queue()
         self.running = False
     
     def log(self, message):
         print(f"Receiver: {message}")
-        self.queue.put(f"Receiver: {message}")
+        self.log_queue.put(f"Receiver: {message}")
     
     def get_logs(self):
         logs = []
-        while not self.queue.empty():
+        while not self.log_queue.empty():
             try:
-                logs.append(self.queue.get_nowait())
+                logs.append(self.log_queue.get_nowait())
             except queue.Empty:
                 break
         return logs
 
+    def clear_logs(self):
+        while not self.log_queue.empty():
+            try:
+                self.log_queue.get_nowait()
+            except queue.Empty:
+                break
     
     def start(self):
         with self.lock:
