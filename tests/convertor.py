@@ -1,5 +1,5 @@
 import unittest
-from src.convertor import strbin_to_hexbyte, int_to_strbin8, strbin_to_int, hexbyte_to_strbin8
+from src.utils.convertor import strbin_to_hexbyte, int_to_strbin8, strbin_to_int, hexbyte_to_strbin8
 
 
 class TestConvertor(unittest.TestCase):

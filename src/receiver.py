@@ -1,10 +1,9 @@
 import random
 import socket
-from hamming_checker import HammingChecker
+from src.encodings.hamming_checker import HammingChecker
 import frame
 from time import sleep
-import checksum
-import parity
+from src.encodings import parity, checksum
 from constants import *
 
 

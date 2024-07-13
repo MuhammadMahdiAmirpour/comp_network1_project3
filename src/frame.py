@@ -1,5 +1,5 @@
-import crc
-import convertor
+from src.encodings import crc
+from src.utils import convertor
 
 MAX_SEQ_BITS = 3
 MAX_SEQ = 8

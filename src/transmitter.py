@@ -4,10 +4,9 @@ import threading
 import numpy as np
 from src.frame import Frame
 from time import sleep
-from crc import generate_invalid_crc, check_crc
-from hamming_encoder import HammingEncoder
-import checksum
-import parity
+from src.encodings.crc import generate_invalid_crc, check_crc
+from src.encodings.hamming_encoder import HammingEncoder
+from src.encodings import parity, checksum
 from constants import *
 
 

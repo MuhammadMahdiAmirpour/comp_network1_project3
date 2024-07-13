@@ -1,4 +1,4 @@
-from encoding import Encoding
+from src.encodings.encoding import Encoding
 
 DEFAULT_HOST = '127.0.0.1'
 DEFAULT_PORT = 65432
